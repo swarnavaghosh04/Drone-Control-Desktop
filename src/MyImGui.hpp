@@ -14,6 +14,7 @@ struct MyImGui{
         Backend(MySDL& sdl) noexcept;
         ~Backend() noexcept;
         void newFrame() noexcept;
+        void draw() noexcept;
     };
 };
 

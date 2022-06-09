@@ -28,3 +28,7 @@ void MyImGui::Backend::newFrame() noexcept{
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
 }
+
+void MyImGui::Backend::draw() noexcept{
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}

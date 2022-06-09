@@ -14,38 +14,86 @@
 #include "MySDL.hpp"
 #include "MyImGui.hpp"
 
-int libserialport_test(){
+struct SerialPorts{
 
-    struct sp_port **port_list;
-    enum sp_return result = sp_list_ports(&port_list);
+    sp_port** port_list;
+    int chosen_port;
+    int open_port;
 
-    if (result != SP_OK) {
-		printf("sp_list_ports() failed!\n");
-		return -1;
-	}
+    SerialPorts() noexcept{
 
-    int i;
-	for (i = 0; port_list[i] != NULL; i++) {
-		struct sp_port *port = port_list[i];
+        chosen_port = -1;
+        open_port = -1;
+        enum sp_return result = sp_list_ports(&port_list);
+        if(result != SP_OK) std::cout << "sp_list_ports() failed!" << std::endl;
 
-		/* Get the name of the port. */
-		char *port_name = sp_get_port_name(port);
+    }
 
-		printf("Found port: %s\n", port_name);
-	}
+    ~SerialPorts() noexcept{
+        sp_free_port_list(port_list);
+        close_open_port();
+    }
 
-	printf("Found %d ports.\n", i);
+    void send_data(float rotors[]){
+        if(chosen_port != -1){
+            if(open_port != chosen_port){
+                close_open_port();
+                sp_open(port_list[chosen_port], SP_MODE_WRITE);
+                open_port = chosen_port;
+                rotors[0] = 0.f;
+                rotors[1] = 0.f;
+                rotors[2] = 0.f;
+                rotors[3] = 0.f;
+            }
 
-    sp_free_port_list(port_list);
+            auto port = port_list[open_port];
+            if(sp_output_waiting(port) == 0){
+                unsigned char data = (unsigned char)(rotors[3] * 255);
+                sp_nonblocking_write(port, &data, sizeof(data));
+                std::cout << "sent: " << static_cast<int>(data) << '\n';
+            }
+            
+        }
+    }
 
-    return 0;
+    void close_open_port(){
+        if(open_port != -1) sp_close(port_list[open_port]);
+    }
 
-}
+};
+
+// int libserialport_test(){
+
+//     struct sp_port **port_list;
+//     enum sp_return result = sp_list_ports(&port_list);
+
+//     if (result != SP_OK) {
+// 		printf("sp_list_ports() failed!\n");
+// 		return -1;
+// 	}
+
+//     int i;
+// 	for (i = 0; port_list[i] != NULL; i++) {
+// 		struct sp_port *port = port_list[i];
+
+// 		/* Get the name of the port. */
+// 		char *port_name = sp_get_port_name(port);
+
+// 		printf("Found port: %s\n", port_name);
+// 	}
+
+// 	printf("Found %d ports.\n", i);
+
+//     sp_free_port_list(port_list);
+
+//     return 0;
+
+// }
 
 int main(){
 
-    int errVal = libserialport_test();
-    if(errVal != 0) return errVal;
+    // int errVal = libserialport_test();
+    // if(errVal != 0) return errVal;
 
     MySDL mySDL = MySDL();
     MyImGui myImGui = MyImGui();
@@ -54,9 +102,10 @@ int main(){
     ImGuiIO& io = ImGui::GetIO();
 
     // Our state
-    bool show_demo_window = true;
+    // bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
     float rotors[] = {0.f, 0, 0, 0};
+    SerialPorts sp;
 
     // Main loop
     bool done = false;
@@ -94,11 +143,16 @@ int main(){
 
             ImGui::Begin("Controls", NULL, flags);
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(50,50));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(50,10));
 
             ImGui::BeginGroup();
-            ImGui::Text("Hello");
-            ImGui::Text("bye");
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(50,15));
+            ImGui::Text("Select Arduino Serial Port:");
+            ImGui::PopStyleVar();
+            for(int i = 0; sp.port_list[i] != NULL; i++){
+                sp_port* port = sp.port_list[i];
+                ImGui::RadioButton(sp_get_port_name(port), &sp.chosen_port, i);
+            }
             ImGui::EndGroup();
 
             ImGui::SameLine();
@@ -117,22 +171,20 @@ int main(){
         }
 
         // Uncomment to see ImGui help window
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+        // if (show_demo_window)
+        //     ImGui::ShowDemoWindow(&show_demo_window);
 
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        backend.draw();
 
         SDL_GL_SwapWindow(mySDL.window);
-    }
 
-    // Cleanup
-    // ImGui_ImplOpenGL3_Shutdown();
-    // ImGui_ImplSDL2_Shutdown();
+        sp.send_data(rotors);
+    }
 
     return 0;
 }

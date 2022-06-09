@@ -12,7 +12,7 @@ MySDL::MySDL() noexcept{
 
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     
-    this->window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    this->window = SDL_CreateWindow("Drone Control", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     this->gl_context = SDL_GL_CreateContext(window);
     
     SDL_GL_MakeCurrent(window, gl_context);
