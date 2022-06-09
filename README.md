@@ -1,5 +1,6 @@
 Dependencies required to be seperately installed:
 - SDL2
+- libserialport
 
 Build Dependencies:
 - CMake

@@ -37,6 +37,7 @@ endif()
 
 find_package(OpenGL REQUIRED)
 find_package(SDL2 CONFIG)
+include(cmake/libserialportConfig.cmake)
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY      https://github.com/ocornut/imgui

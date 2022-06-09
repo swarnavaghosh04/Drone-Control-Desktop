@@ -17,5 +17,5 @@ target_sources(
 
 message(STATUS "OpenGL Library: ${OPENGL_opengl_LIBRARY}")
 
-target_link_libraries(DroneControl PRIVATE SDL2::SDL2 OpenGL::GL)
+target_link_libraries(DroneControl PRIVATE SDL2::SDL2 OpenGL::GL libserialport::libserialport)
 target_include_directories(DroneControl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${imgui_dir} ${imgui_dir}/backends)

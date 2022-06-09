@@ -12,7 +12,40 @@
 #include <SDL_opengl.h>
 #endif
 
+#include <libserialport.h>
+
+int libserialport_test(){
+
+    struct sp_port **port_list;
+    enum sp_return result = sp_list_ports(&port_list);
+
+    if (result != SP_OK) {
+		printf("sp_list_ports() failed!\n");
+		return -1;
+	}
+
+    int i;
+	for (i = 0; port_list[i] != NULL; i++) {
+		struct sp_port *port = port_list[i];
+
+		/* Get the name of the port. */
+		char *port_name = sp_get_port_name(port);
+
+		printf("Found port: %s\n", port_name);
+	}
+
+	printf("Found %d ports.\n", i);
+
+    sp_free_port_list(port_list);
+
+    return 0;
+
+}
+
 int main(){
+
+    int errVal = libserialport_test();
+    if(errVal != 0) return errVal;
 
 	SDL_Init(SDL_INIT_EVERYTHING);
 
