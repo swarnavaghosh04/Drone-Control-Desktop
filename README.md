@@ -8,9 +8,9 @@ Depencies automatically handled by CMake:
 - ImGui
 
 Build Process:
-'''
+```
 mkdir build && cd build
 cmake ..
 cmake --build .
 cmake --install . --prefix <path_to_install_location>
-'''
+```
