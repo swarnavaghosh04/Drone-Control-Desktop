@@ -40,6 +40,7 @@ struct SerialPorts{
                 close_open_port();
                 sp_open(port_list[chosen_port], SP_MODE_WRITE);
                 open_port = chosen_port;
+                sp_set_baudrate(port_list[open_port], 9600);
                 rotors[0] = 0.f;
                 rotors[1] = 0.f;
                 rotors[2] = 0.f;
@@ -50,7 +51,6 @@ struct SerialPorts{
             if(sp_output_waiting(port) == 0){
                 unsigned char data = (unsigned char)(rotors[3] * 255);
                 sp_nonblocking_write(port, &data, sizeof(data));
-                std::cout << "sent: " << static_cast<int>(data) << '\n';
             }
             
         }
