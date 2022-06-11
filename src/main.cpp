@@ -9,91 +9,12 @@
 #else
 #include <SDL2/SDL_opengl.h>
 #endif
-#include <libserialport.h>
 
 #include "MySDL.hpp"
 #include "MyImGui.hpp"
-
-struct SerialPorts{
-
-    sp_port** port_list;
-    int chosen_port;
-    int open_port;
-
-    SerialPorts() noexcept{
-
-        chosen_port = -1;
-        open_port = -1;
-        enum sp_return result = sp_list_ports(&port_list);
-        if(result != SP_OK) std::cout << "sp_list_ports() failed!" << std::endl;
-
-    }
-
-    ~SerialPorts() noexcept{
-        sp_free_port_list(port_list);
-        close_open_port();
-    }
-
-    void send_data(float rotors[]){
-        if(chosen_port != -1){
-            if(open_port != chosen_port){
-                close_open_port();
-                sp_open(port_list[chosen_port], SP_MODE_WRITE);
-                open_port = chosen_port;
-                sp_set_baudrate(port_list[open_port], 9600);
-                rotors[0] = 0.f;
-                rotors[1] = 0.f;
-                rotors[2] = 0.f;
-                rotors[3] = 0.f;
-            }
-
-            auto port = port_list[open_port];
-            if(sp_output_waiting(port) == 0){
-                unsigned char data = (unsigned char)(rotors[3] * 255);
-                sp_nonblocking_write(port, &data, sizeof(data));
-            }
-            
-        }
-    }
-
-    void close_open_port(){
-        if(open_port != -1) sp_close(port_list[open_port]);
-    }
-
-};
-
-// int libserialport_test(){
-
-//     struct sp_port **port_list;
-//     enum sp_return result = sp_list_ports(&port_list);
-
-//     if (result != SP_OK) {
-// 		printf("sp_list_ports() failed!\n");
-// 		return -1;
-// 	}
-
-//     int i;
-// 	for (i = 0; port_list[i] != NULL; i++) {
-// 		struct sp_port *port = port_list[i];
-
-// 		/* Get the name of the port. */
-// 		char *port_name = sp_get_port_name(port);
-
-// 		printf("Found port: %s\n", port_name);
-// 	}
-
-// 	printf("Found %d ports.\n", i);
-
-//     sp_free_port_list(port_list);
-
-//     return 0;
-
-// }
+#include "MySerialPorts.hpp"
 
 int main(){
-
-    // int errVal = libserialport_test();
-    // if(errVal != 0) return errVal;
 
     MySDL mySDL = MySDL();
     MyImGui myImGui = MyImGui();
@@ -105,7 +26,7 @@ int main(){
     // bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
     float rotors[] = {0.f, 0, 0, 0};
-    SerialPorts sp;
+    MySerialPorts sp;
 
     // Main loop
     bool done = false;
@@ -146,13 +67,15 @@ int main(){
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(50,10));
 
             ImGui::BeginGroup();
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(50,15));
             ImGui::Text("Select Arduino Serial Port:");
-            ImGui::PopStyleVar();
-            for(int i = 0; sp.port_list[i] != NULL; i++){
+            ImGui::BeginChild("Arduino Selector", ImVec2(150, 300), true);
+            int i;
+            for(i = 0; sp.port_list[i] != NULL; i++){
                 sp_port* port = sp.port_list[i];
                 ImGui::RadioButton(sp_get_port_name(port), &sp.chosen_port, i);
             }
+            ImGui::EndChild();
+            if(ImGui::Button("Refersh list")) sp.refresh_port_list();
             ImGui::EndGroup();
 
             ImGui::SameLine();
