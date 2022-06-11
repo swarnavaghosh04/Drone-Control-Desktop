@@ -13,6 +13,7 @@
 #include "MySDL.hpp"
 #include "MyImGui.hpp"
 #include "MySerialPorts.hpp"
+#include "Rotors.hpp"
 
 int main(){
 
@@ -25,7 +26,7 @@ int main(){
     // Our state
     // bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
-    float rotors[] = {0.f, 0, 0, 0};
+    Rotors rotors = Rotors();
     MySerialPorts sp;
 
     // Main loop
@@ -69,8 +70,7 @@ int main(){
             ImGui::BeginGroup();
             ImGui::Text("Select Arduino Serial Port:");
             ImGui::BeginChild("Arduino Selector", ImVec2(150, 300), true);
-            int i;
-            for(i = 0; sp.port_list[i] != NULL; i++){
+            for(int i = 0; sp.port_list[i] != NULL; i++){
                 sp_port* port = sp.port_list[i];
                 ImGui::RadioButton(sp_get_port_name(port), &sp.chosen_port, i);
             }
@@ -80,13 +80,15 @@ int main(){
 
             ImGui::SameLine();
 
-            ImGui::VSliderFloat("Rotor 1", ImVec2(30,400), &rotors[0], 0.f, 1.f, "");
+            ImGui::VSliderFloat("Rotor 1", ImVec2(30,400), &rotors.r1, 0.f, 1.f, "");
             ImGui::SameLine();
-            ImGui::VSliderFloat("Rotor 2", ImVec2(30,400), &rotors[1], 0.f, 1.f, "");
+            ImGui::VSliderFloat("Rotor 2", ImVec2(30,400), &rotors.r2, 0.f, 1.f, "");
             ImGui::SameLine();
-            ImGui::VSliderFloat("Rotor 3", ImVec2(30,400), &rotors[2], 0.f, 1.f, "");
+            ImGui::VSliderFloat("Rotor 3", ImVec2(30,400), &rotors.r3, 0.f, 1.f, "");
             ImGui::SameLine();
-            ImGui::VSliderFloat("Rotor 4", ImVec2(30,400), &rotors[3], 0.f, 1.f, "");
+            ImGui::VSliderFloat("Rotor 4", ImVec2(30,400), &rotors.r4, 0.f, 1.f, "");
+            ImGui::SameLine();
+            ImGui::VSliderFloat("Master", ImVec2(30,400), &rotors.master, 0.f, 1.f, "");
 
             ImGui::PopStyleVar();
 
@@ -106,6 +108,7 @@ int main(){
 
         SDL_GL_SwapWindow(mySDL.window);
 
+        rotors.process();
         sp.send_data(rotors);
     }
 
